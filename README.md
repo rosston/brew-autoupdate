@@ -13,12 +13,13 @@ for other people too.
   2. Checks for outdated formulae
   3. Runs the upgrade
   4. Cleans up afterward
-* Runs upgrade in Terminal.app so you can see all output
 * Provides launchd agent and installer to let launchd run upgrades
   automatically
 * Allows for "blocker formulae" that stop autoupgrades, in case you have
   formulae you want to manage on your own timeline
+* Runs upgrade in Terminal.app so you can see all output
 * Shows every `brew` command that's run in the script, to demystify things
+* Keeps your computer awake while running upgrade
 
 ## Install
 
