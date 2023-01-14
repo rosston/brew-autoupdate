@@ -36,6 +36,7 @@ for other people too.
    running in them and don't want tmux or vim updated out from underneath you),
    you can add a "blocker formulae" list
    ```
+   mkdir -p ~/.config/brew-autoupdate
    touch ~/.config/brew-autoupdate/blocker-formulae
    # Then put whatever formulae names you want in this file,
    # one formula per line.
