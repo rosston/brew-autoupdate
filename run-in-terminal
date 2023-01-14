@@ -1,0 +1,6 @@
+#!/bin/sh
+
+cmd="$@"
+
+osascript -e "tell application \"Terminal\" to do script \"${cmd}\""
+osascript -e "tell application \"Terminal\" to activate"

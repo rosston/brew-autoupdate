@@ -1,0 +1,99 @@
+#!/bin/sh
+
+set -e
+
+# Get basedir: https://stackoverflow.com/a/43919044
+a="/$0"; a=${a%/*}; a=${a#/}; a=${a:-.}; BASEDIR=$(cd "$a"; pwd)
+
+BLOCKER_FORMULAE_PATH="${HOME}/.config/brew-autoupdate/blocker-formulae"
+PLIST_TEMPLATE_PATH="${BASEDIR}/com.thinkingsauce.brew_autoupdate.plist"
+PLIST_DEST_PATH="${HOME}/Library/LaunchAgents/com.thinkingsauce.brew_autoupdate.plist"
+RUN_IN_TERMINAL_PATH="${BASEDIR}/run-in-terminal"
+SELF_PATH="${BASEDIR}/brew-autoupdate"
+
+has_upgrades() {
+  upgrades_available=`brew outdated | wc -l`
+
+  test $upgrades_available -gt 0
+}
+
+has_blockers() {
+  upgrades=`brew outdated`
+
+  if [ ! -f "$BLOCKER_FORMULAE_PATH" ]; then
+    return 1 # false
+  fi
+
+  while read blocker_formula; do
+    if echo "$upgrades" | grep -q "^$blocker_formula"; then
+      return 0 # true
+    fi
+  done < "$BLOCKER_FORMULAE_PATH"
+
+  return 1 # false
+}
+
+do_cmd() {
+  cmd=$1
+
+  echo "\n\$ $cmd"
+  caffeinate -i $cmd
+}
+
+do_exit() {
+  echo "\n\n========================\nEND HOMEBREW AUTO-UPDATE\n"
+  exit 0
+}
+
+run() {
+  echo "\nBEGIN HOMEBREW AUTO-UPDATE\n==========================\n"
+
+  do_cmd "brew update"
+  do_cmd "brew outdated"
+
+  upgrades_available=`brew outdated | wc -l`
+
+  if ! has_upgrades; then
+    echo "\nNo upgrades available."
+    do_exit
+  elif has_blockers; then
+    echo "\nFound blocker formulae available to upgrade. Quitting so you can manually upgrade."
+    do_exit
+  fi
+
+  do_cmd "brew upgrade"
+  do_cmd "brew cleanup"
+  do_exit
+}
+
+usage() {
+  echo "Usage:"
+  echo "\tbrew-autoupdate [run|install|uninstall]"
+  exit 1
+}
+
+install() {
+  sed -e "s#{{runInTerminalPath}}#${RUN_IN_TERMINAL_PATH}#g" \
+    -e "s#{{brewAutoupdatePath}}#${SELF_PATH}#g" \
+    "$PLIST_TEMPLATE_PATH" \
+    > "$PLIST_DEST_PATH"
+  launchctl load "$PLIST_DEST_PATH"
+  echo "Installed plist at ${PLIST_DEST_PATH}"
+}
+
+uninstall() {
+  launchctl unload "$PLIST_DEST_PATH"
+  rm "$PLIST_DEST_PATH"
+  echo "Uninstalled plist from ${PLIST_DEST_PATH}"
+}
+
+case "$1" in
+  "run") run
+    ;;
+  "install") install
+    ;;
+  "uninstall") uninstall
+    ;;
+  *) usage
+    ;;
+esac
