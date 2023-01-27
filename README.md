@@ -52,6 +52,8 @@ for other people too.
    the interval settings (HINT: run `man launchd.plist` and search for
    `StartCalendarInterval` to see  your options)
 
+NOTE: I think you need to have your screen on for the first time the launchd agent runs so that you can approve a prompt to let "sh control Terminal". That's because the plist [uses some AppleScript to run the autoupdate script in Terminal.app](https://github.com/rosston/brew-autoupdate/blob/main/run-in-terminal).
+
 ## Uninstall
 
 1. Run the uninstall script
